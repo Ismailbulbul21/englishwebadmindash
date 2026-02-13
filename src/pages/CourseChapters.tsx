@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useCourse, useCreateChapter, useUpdateChapter, useDeleteChapter } from '../hooks/useCourses';
 import { useState } from 'react';
-import { ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, FileText } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -107,6 +107,7 @@ export const CourseChapters = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase">Title</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase">Video</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase">Exam</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase">Actions</th>
               </tr>
             </thead>
@@ -122,6 +123,15 @@ export const CourseChapters = () => {
                     <span className={`px-2 py-1 rounded text-xs ${chapter.is_published ? 'bg-emerald-500 text-white' : 'bg-slate-600 text-slate-300'}`}>
                       {chapter.is_published ? 'Published' : 'Draft'}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Link
+                      to={`/chapters/${chapter.id}/exam`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm"
+                    >
+                      <FileText className="h-4 w-4" />
+                      Add / Manage exam
+                    </Link>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">

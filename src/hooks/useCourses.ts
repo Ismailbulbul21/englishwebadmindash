@@ -20,6 +20,22 @@ export const useCourses = (level?: string) => {
   });
 };
 
+export const useChapter = (chapterId: string) => {
+  return useQuery({
+    queryKey: ['chapter', chapterId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('chapters')
+        .select('id, course_id, title')
+        .eq('id', chapterId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!chapterId,
+  });
+};
+
 export const useCourse = (courseId: string) => {
   return useQuery({
     queryKey: ['course', courseId],

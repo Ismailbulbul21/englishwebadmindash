@@ -3,6 +3,40 @@ import { supabase } from '../lib/supabase';
 import type { Exam, ExamQuestion } from '../types/database';
 import { toast } from 'react-hot-toast';
 
+/** Fetch all exams with chapter + course info and question count for the Exams list page */
+export const useAllExams = () => {
+  return useQuery({
+    queryKey: ['exams', 'all'],
+    queryFn: async () => {
+      const { data: exams, error: examsError } = await supabase
+        .from('exams')
+        .select('*, chapters(id, title, course_id, courses(id, title, level))');
+
+      if (examsError) throw examsError;
+
+      const examIds = (exams ?? []).map((e: { id: string }) => e.id);
+      if (examIds.length === 0) return [];
+
+      const { data: questions } = await supabase
+        .from('exam_questions')
+        .select('exam_id')
+        .in('exam_id', examIds);
+
+      const countByExam: Record<string, number> = {};
+      (questions ?? []).forEach((q: { exam_id: string }) => {
+        countByExam[q.exam_id] = (countByExam[q.exam_id] ?? 0) + 1;
+      });
+
+      return (exams ?? []).map((exam: any) => ({
+        ...exam,
+        chapter: exam.chapters,
+        course: exam.chapters?.courses,
+        questionCount: countByExam[exam.id] ?? 0,
+      }));
+    },
+  });
+};
+
 export const useExam = (chapterId: string) => {
   return useQuery({
     queryKey: ['exam', chapterId],
@@ -41,9 +75,10 @@ export const useCreateExam = () => {
 
   return useMutation({
     mutationFn: async ({ chapterId, passingScore = 70 }: { chapterId: string; passingScore?: number }) => {
+      const score = Math.min(100, Math.max(0, Number(passingScore) || 70));
       const { data, error } = await supabase
         .from('exams')
-        .insert({ chapter_id: chapterId, passing_score: passingScore })
+        .insert({ chapter_id: chapterId, passing_score: score })
         .select()
         .single();
 

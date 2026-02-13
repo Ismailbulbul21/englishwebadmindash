@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useExam, useCreateExam, useUpdateExam, useCreateQuestion, useUpdateQuestion, useDeleteQuestion } from '../hooks/useExams';
+import { useChapter } from '../hooks/useCourses';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -24,6 +25,7 @@ export const ExamEditor = () => {
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
 
+  const { data: chapter } = useChapter(chapterId || '');
   const { data: examData, isLoading } = useExam(chapterId || '');
   const createExam = useCreateExam();
   const updateExam = useUpdateExam();
@@ -114,20 +116,38 @@ export const ExamEditor = () => {
     return (
       <div className="space-y-6">
         <Link
-          to="/courses"
+          to={chapter?.course_id ? `/courses/${chapter.course_id}/chapters` : '/courses'}
           className="inline-flex items-center space-x-2 text-slate-400 hover:text-slate-200"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Courses</span>
+          <span>Back to Chapters</span>
         </Link>
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700 text-center">
-          <p className="text-slate-400 mb-4">No exam created for this chapter yet.</p>
-          <button
-            onClick={handleCreateExam}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg"
-          >
-            Create Exam
-          </button>
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700 max-w-md">
+          <h2 className="text-xl font-bold text-slate-50 mb-2">Add exam</h2>
+          <p className="text-slate-400 text-sm mb-4">
+            One exam per chapter. Set the passing score (0–100). After creating the exam, add questions with four options and one correct answer (a/b/c/d).
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Passing score (%)</label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={passingScore}
+                onChange={(e) => setPassingScore(Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200"
+              />
+              <p className="mt-1 text-xs text-slate-500">0–100, default 70</p>
+            </div>
+            <button
+              onClick={handleCreateExam}
+              disabled={createExam.isPending}
+              className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg"
+            >
+              {createExam.isPending ? 'Creating…' : 'Create exam'}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -136,11 +156,11 @@ export const ExamEditor = () => {
   return (
     <div className="space-y-6">
       <Link
-        to="/courses"
+        to={chapter?.course_id ? `/courses/${chapter.course_id}/chapters` : '/courses'}
         className="inline-flex items-center space-x-2 text-slate-400 hover:text-slate-200"
       >
         <ArrowLeft className="h-4 w-4" />
-        <span>Back to Courses</span>
+        <span>Back to Chapters</span>
       </Link>
 
       {/* Exam Settings */}
