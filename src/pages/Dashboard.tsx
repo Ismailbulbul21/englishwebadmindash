@@ -7,7 +7,7 @@ import {
   useEnglishLevelDistribution,
   useRecentActivity,
 } from '../hooks/useDashboard';
-import { Users, CreditCard, DollarSign, MessageSquare, BookOpen, Clock, GraduationCap } from 'lucide-react';
+import { Users, CreditCard, DollarSign, MessageSquare, BookOpen, Clock, GraduationCap, ClipboardCheck } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -128,6 +128,39 @@ export const Dashboard = () => {
             <Clock className="h-5 w-5 text-sky-400" />
             {stats?.waitingForMatch ?? 0}
           </p>
+        </div>
+      </div>
+
+      <div className="bg-slate-800/80 rounded-lg border border-indigo-500/30 p-5">
+        <h2 className="text-lg font-semibold text-slate-50 mb-4 flex items-center gap-2">
+          <ClipboardCheck className="h-5 w-5 text-indigo-400" />
+          Lesson quizzes
+        </h2>
+        <p className="text-slate-500 text-sm mb-4">
+          Based on <code className="text-slate-400">lesson_progress</code> where learners have started or finished a quiz (
+          <code className="text-slate-400">quiz_total &gt; 0</code>).
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+            <p className="text-slate-400 text-sm">Users who took a quiz</p>
+            <p className="text-2xl font-bold text-slate-50 mt-1">{stats?.usersWhoTookQuiz ?? 0}</p>
+            <p className="text-xs text-slate-500 mt-1">Distinct users with ≥1 lesson quiz attempt</p>
+          </div>
+          <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+            <p className="text-slate-400 text-sm">Quiz attempts (lessons)</p>
+            <p className="text-2xl font-bold text-slate-50 mt-1">{stats?.quizLessonAttempts ?? 0}</p>
+            <p className="text-xs text-slate-500 mt-1">Rows with quiz activity per user per lesson</p>
+          </div>
+          <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+            <p className="text-slate-400 text-sm">Users who finished a quiz lesson</p>
+            <p className="text-2xl font-bold text-emerald-400 mt-1">{stats?.usersCompletedQuizLesson ?? 0}</p>
+            <p className="text-xs text-slate-500 mt-1">Distinct users with ≥1 completed lesson that had a quiz</p>
+          </div>
+          <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+            <p className="text-slate-400 text-sm">Quiz questions in curriculum</p>
+            <p className="text-2xl font-bold text-slate-50 mt-1">{stats?.totalQuizQuestions ?? 0}</p>
+            <p className="text-xs text-slate-500 mt-1">Total rows in lesson_quiz_questions</p>
+          </div>
         </div>
       </div>
 

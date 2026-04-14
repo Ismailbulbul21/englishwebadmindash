@@ -31,6 +31,24 @@ export const useDashboardStats = () => {
 
       const { count: waitingCount } = await supabase.from('waiting_users').select('*', { count: 'exact', head: true });
 
+      const { data: quizProgressRows, error: quizErr } = await supabase
+        .from('lesson_progress')
+        .select('user_id, quiz_total, quiz_score, is_completed')
+        .gt('quiz_total', 0);
+
+      if (quizErr) throw quizErr;
+
+      const rows = quizProgressRows ?? [];
+      const usersWhoTookQuiz = new Set(rows.map((r) => r.user_id)).size;
+      const quizLessonAttempts = rows.length;
+      const usersCompletedQuizLesson = new Set(
+        rows.filter((r) => r.is_completed && r.quiz_total > 0).map((r) => r.user_id),
+      ).size;
+
+      const { count: totalQuizQuestions } = await supabase
+        .from('lesson_quiz_questions')
+        .select('*', { count: 'exact', head: true });
+
       return {
         totalUsers: totalUsers ?? 0,
         subscribedUsers: subscribedUserIds.size,
@@ -40,6 +58,10 @@ export const useDashboardStats = () => {
         publishedLessons: publishedLessons ?? 0,
         activeSessions: activeSessions ?? 0,
         waitingForMatch: waitingCount ?? 0,
+        usersWhoTookQuiz,
+        quizLessonAttempts,
+        usersCompletedQuizLesson,
+        totalQuizQuestions: totalQuizQuestions ?? 0,
       };
     },
     staleTime: 30_000,
