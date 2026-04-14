@@ -8,7 +8,9 @@ export const useSpeakingSessions = (filters?: { status?: SessionStatus | 'all' }
     queryFn: async () => {
       let query = supabase
         .from('speaking_sessions')
-        .select('*, user_a_profile:profiles!speaking_sessions_user_a_fkey(email), user_b_profile:profiles!speaking_sessions_user_b_fkey(email)');
+        .select(
+          '*, user_a_profile:profiles!speaking_sessions_user_a_fkey(email, username), user_b_profile:profiles!speaking_sessions_user_b_fkey(email, username)',
+        );
 
       if (filters?.status && filters.status !== 'all') {
         query = query.eq('status', filters.status);
@@ -19,33 +21,7 @@ export const useSpeakingSessions = (filters?: { status?: SessionStatus | 'all' }
       if (error) throw error;
       return data || [];
     },
-    refetchInterval: 10000, // Refetch every 10 seconds for active sessions
-  });
-};
-
-export const useSpeakingSession = (sessionId: string) => {
-  return useQuery({
-    queryKey: ['speakingSession', sessionId],
-    queryFn: async () => {
-      const { data: session, error: sessionError } = await supabase
-        .from('speaking_sessions')
-        .select('*, user_a_profile:profiles!speaking_sessions_user_a_fkey(*), user_b_profile:profiles!speaking_sessions_user_b_fkey(*)')
-        .eq('id', sessionId)
-        .single();
-
-      if (sessionError) throw sessionError;
-
-      const { data: ratings } = await supabase
-        .from('session_ratings')
-        .select('*')
-        .eq('session_id', sessionId);
-
-      return {
-        session,
-        ratings: ratings || [],
-      };
-    },
-    enabled: !!sessionId,
+    refetchInterval: 10_000,
   });
 };
 
@@ -53,28 +29,24 @@ export const useSpeakingSessionStats = () => {
   return useQuery({
     queryKey: ['speakingSessionStats'],
     queryFn: async () => {
-      const { count: totalSessions } = await supabase
-        .from('speaking_sessions')
-        .select('*', { count: 'exact', head: true });
+      const { count: totalSessions } = await supabase.from('speaking_sessions').select('*', { count: 'exact', head: true });
 
       const { count: activeSessions } = await supabase
         .from('speaking_sessions')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'active')
-        .gt('end_time', new Date().toISOString());
+        .eq('status', 'active');
 
       const { data: endedSessions } = await supabase
         .from('speaking_sessions')
         .select('start_time, end_time')
-        .eq('status', 'ended')
-        .not('end_time', 'is', null);
+        .eq('status', 'ended');
 
       const avgDuration =
         endedSessions && endedSessions.length > 0
           ? endedSessions.reduce((sum, s) => {
-              const duration =
-                new Date(s.end_time!).getTime() - new Date(s.start_time).getTime();
-              return sum + duration;
+              const end = new Date(s.end_time).getTime();
+              const start = new Date(s.start_time).getTime();
+              return sum + (end - start);
             }, 0) / endedSessions.length
           : 0;
 
@@ -86,11 +58,14 @@ export const useSpeakingSessionStats = () => {
         .select('*', { count: 'exact', head: true })
         .gte('start_time', today.toISOString());
 
+      const { count: waiting } = await supabase.from('waiting_users').select('*', { count: 'exact', head: true });
+
       return {
         totalSessions: totalSessions || 0,
         activeSessions: activeSessions || 0,
-        averageDuration: avgDuration / 1000 / 60, // Convert to minutes
+        averageDuration: avgDuration / 1000 / 60,
         sessionsToday: sessionsToday || 0,
+        waitingForMatch: waiting || 0,
       };
     },
   });

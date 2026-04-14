@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Users,
   BookOpen,
-  FileText,
   CreditCard,
   MessageSquare,
   Settings,
@@ -15,8 +14,7 @@ import { useState } from 'react';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Users', href: '/users', icon: Users },
-  { name: 'Courses', href: '/courses', icon: BookOpen },
-  { name: 'Exams', href: '/exams', icon: FileText },
+  { name: 'Lessons', href: '/lessons', icon: BookOpen },
   { name: 'Subscriptions', href: '/subscriptions', icon: CreditCard },
   { name: 'Speaking Sessions', href: '/speaking-sessions', icon: MessageSquare },
   { name: 'Settings', href: '/settings', icon: Settings },

@@ -10,17 +10,14 @@ const getPageTitle = (pathname: string): string => {
   const titles: Record<string, string> = {
     '/dashboard': 'Dashboard',
     '/users': 'User Management',
-    '/courses': 'Course Management',
-    '/exams': 'Exam Management',
+    '/lessons': 'Lessons',
     '/subscriptions': 'Subscription Management',
     '/speaking-sessions': 'Speaking Sessions',
     '/settings': 'Settings',
   };
 
-  // Handle nested routes
   if (pathname.startsWith('/users/')) return 'User Details';
-  if (pathname.startsWith('/courses/')) return 'Course Details';
-  if (pathname.startsWith('/chapters/')) return 'Chapter Details';
+  if (pathname.startsWith('/lessons/')) return 'Lesson Editor';
 
   return titles[pathname] || 'Admin Dashboard';
 };

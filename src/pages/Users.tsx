@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { useUsers, useUpdateUserLevel, LEVELS } from '../hooks/useUsers';
+import { toast } from 'react-hot-toast';
+import { useUsers, useUpdateUserEnglishLevel, LEVELS } from '../hooks/useUsers';
 import { Search, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
+import type { EnglishLevel } from '../types/database';
 
 export const Users = () => {
   const [search, setSearch] = useState('');
@@ -18,11 +20,15 @@ export const Users = () => {
     limit: 50,
   });
 
-  const updateLevel = useUpdateUserLevel();
+  const updateLevel = useUpdateUserEnglishLevel();
 
   const handleLevelChange = async (userId: string, newLevel: string) => {
-    if (LEVELS.includes(newLevel as any) && confirm(`Change user level to "${newLevel}"?`)) {
-      updateLevel.mutate({ userId, level: newLevel });
+    if (!LEVELS.includes(newLevel as EnglishLevel)) {
+      toast.error('Level must be beginner, intermediate, or advanced');
+      return;
+    }
+    if (confirm(`Set English level to "${newLevel}"?`)) {
+      updateLevel.mutate({ userId, english_level: newLevel as EnglishLevel });
     }
   };
 
@@ -51,7 +57,7 @@ export const Users = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by email..."
+              placeholder="Search by email or username..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -64,7 +70,9 @@ export const Users = () => {
           >
             <option value="">All levels</option>
             {LEVELS.map((l) => (
-              <option key={l} value={l}>{l}</option>
+              <option key={l} value={l}>
+                {l}
+              </option>
             ))}
           </select>
           <select
@@ -72,9 +80,9 @@ export const Users = () => {
             onChange={(e) => setSubscriptionFilter(e.target.value as typeof subscriptionFilter)}
             className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            <option value="all">All Subscriptions</option>
+            <option value="all">All subscriptions</option>
             <option value="active">Active</option>
-            <option value="expired">Expired</option>
+            <option value="expired">Expired / inactive</option>
             <option value="none">None</option>
           </select>
         </div>
@@ -85,8 +93,8 @@ export const Users = () => {
           <table className="w-full">
             <thead className="bg-slate-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Level</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Email / user</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">English level</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Subscription</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Created</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Actions</th>
@@ -95,34 +103,34 @@ export const Users = () => {
             <tbody className="divide-y divide-slate-700">
               {data?.users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-400">No users found.</td>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                    No users found.
+                  </td>
                 </tr>
               ) : (
-                data?.users.map((user: any) => {
+                data?.users.map((user: { id: string; email?: string | null; username?: string | null; english_level?: string | null; created_at?: string | null; subscription?: { end_date: string } | null }) => {
                   const subscription = user.subscription;
-                  const isActive =
-                    subscription?.status === 'active' && new Date(subscription.end_date) > new Date();
+                  const isActive = !!subscription && new Date(subscription.end_date) > new Date();
                   const daysUntilExpiry =
                     subscription && isActive
                       ? Math.ceil(
-                          (new Date(subscription.end_date).getTime() - new Date().getTime()) /
-                            (1000 * 60 * 60 * 24)
+                          (new Date(subscription.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
                         )
                       : null;
                   return (
                     <tr key={user.id} className="hover:bg-slate-700/50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Link to={`/users/${user.id}`} className="text-sm font-medium text-indigo-400 hover:text-indigo-300">
-                          {user.email ?? user.id.slice(0, 8)}
+                          {user.email ?? user.username ?? user.id.slice(0, 8)}
                         </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-200 capitalize">{user.level ?? '—'}</span>
+                        <span className="text-sm text-slate-200 capitalize">{user.english_level ?? '—'}</span>
                         <button
                           type="button"
                           onClick={() => {
-                            const v = window.prompt('New level (beginner / intermediate / advanced)', user.level ?? '');
-                            if (v != null && v.trim() && v.trim() !== (user.level ?? '')) handleLevelChange(user.id, v.trim());
+                            const v = window.prompt('English level: beginner / intermediate / advanced', user.english_level ?? '');
+                            if (v != null && v.trim() && v.trim() !== (user.english_level ?? '')) handleLevelChange(user.id, v.trim().toLowerCase());
                           }}
                           className="ml-2 text-xs text-indigo-400 hover:text-indigo-300"
                         >
@@ -131,9 +139,11 @@ export const Users = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {isActive ? (
-                          <span className="text-emerald-400">Active {daysUntilExpiry != null ? `(expires in ${daysUntilExpiry}d)` : ''}</span>
+                          <span className="text-emerald-400">
+                            Active {daysUntilExpiry != null ? `(expires in ${daysUntilExpiry}d)` : ''}
+                          </span>
                         ) : subscription ? (
-                          <span className="text-red-400">Expired</span>
+                          <span className="text-amber-400">Inactive</span>
                         ) : (
                           <span className="text-slate-400">None</span>
                         )}

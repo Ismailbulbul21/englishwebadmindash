@@ -3,9 +3,11 @@ import {
   useRevenueChart,
   useUserGrowth,
   useSubscriptionDistribution,
+  usePaymentChannelDistribution,
+  useEnglishLevelDistribution,
   useRecentActivity,
 } from '../hooks/useDashboard';
-import { Users, CreditCard, DollarSign, MessageSquare } from 'lucide-react';
+import { Users, CreditCard, DollarSign, MessageSquare, BookOpen, Clock, GraduationCap } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -22,36 +24,45 @@ import {
 } from 'recharts';
 import { format } from 'date-fns';
 
-const COLORS = ['#6366F1', '#10B981', '#8B5CF6'];
+const COLORS = ['#6366F1', '#10B981', '#8B5CF6', '#F59E0B', '#EC4899', '#14B8A6'];
 
 export const Dashboard = () => {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: revenueData } = useRevenueChart(30);
   const { data: userGrowthData } = useUserGrowth(30);
   const { data: subscriptionDist } = useSubscriptionDistribution();
+  const { data: paymentDist } = usePaymentChannelDistribution();
+  const { data: levelDist } = useEnglishLevelDistribution();
   const { data: recentActivity } = useRecentActivity();
 
   const pieData = subscriptionDist
     ? Object.entries(subscriptionDist).map(([name, value]) => ({ name, value }))
     : [];
 
+  const paymentPie = paymentDist
+    ? Object.entries(paymentDist).map(([name, value]) => ({ name, value }))
+    : [];
+
+  const levelPie = levelDist
+    ? Object.entries(levelDist).map(([name, value]) => ({ name, value }))
+    : [];
+
   if (statsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-slate-800 rounded-lg p-5 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-400 text-sm">Total Users</p>
-              <p className="text-2xl font-bold text-slate-50 mt-1">{stats?.totalUsers || 0}</p>
+              <p className="text-slate-400 text-sm">Total users</p>
+              <p className="text-2xl font-bold text-slate-50 mt-1">{stats?.totalUsers ?? 0}</p>
             </div>
             <div className="bg-indigo-600 p-3 rounded-lg">
               <Users className="h-6 w-6 text-white" />
@@ -59,54 +70,70 @@ export const Dashboard = () => {
           </div>
         </div>
 
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <div className="bg-slate-800 rounded-lg p-5 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-400 text-sm">Active Subscriptions</p>
-              <p className="text-2xl font-bold text-slate-50 mt-1">
-                {stats?.activeSubscriptions || 0}
-              </p>
+              <p className="text-slate-400 text-sm">Subscribed users (active)</p>
+              <p className="text-2xl font-bold text-slate-50 mt-1">{stats?.subscribedUsers ?? 0}</p>
             </div>
             <div className="bg-emerald-600 p-3 rounded-lg">
+              <GraduationCap className="h-6 w-6 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-slate-800 rounded-lg p-5 border border-slate-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-slate-400 text-sm">Active subscription rows</p>
+              <p className="text-2xl font-bold text-slate-50 mt-1">{stats?.activeSubscriptions ?? 0}</p>
+            </div>
+            <div className="bg-teal-600 p-3 rounded-lg">
               <CreditCard className="h-6 w-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <div className="bg-slate-800 rounded-lg p-5 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-400 text-sm">Total Revenue</p>
-              <p className="text-2xl font-bold text-slate-50 mt-1">
-                ${(stats?.totalRevenue || 0).toFixed(2)}
-              </p>
+              <p className="text-slate-400 text-sm">Revenue (active subs)</p>
+              <p className="text-2xl font-bold text-slate-50 mt-1">${(stats?.totalRevenue ?? 0).toFixed(2)}</p>
             </div>
             <div className="bg-amber-600 p-3 rounded-lg">
               <DollarSign className="h-6 w-6 text-white" />
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-sm">Active Sessions</p>
-              <p className="text-2xl font-bold text-slate-50 mt-1">
-                {stats?.activeSessions || 0}
-              </p>
-            </div>
-            <div className="bg-purple-600 p-3 rounded-lg">
-              <MessageSquare className="h-6 w-6 text-white" />
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-slate-800 rounded-lg p-5 border border-slate-700">
+          <p className="text-slate-400 text-sm">Lessons (total / published)</p>
+          <p className="text-xl font-bold text-slate-50 mt-1 flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-indigo-400" />
+            {stats?.totalLessons ?? 0} / {stats?.publishedLessons ?? 0}
+          </p>
+        </div>
+        <div className="bg-slate-800 rounded-lg p-5 border border-slate-700">
+          <p className="text-slate-400 text-sm">Active speaking sessions</p>
+          <p className="text-xl font-bold text-slate-50 mt-1 flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-purple-400" />
+            {stats?.activeSessions ?? 0}
+          </p>
+        </div>
+        <div className="bg-slate-800 rounded-lg p-5 border border-slate-700">
+          <p className="text-slate-400 text-sm">Waiting for match</p>
+          <p className="text-xl font-bold text-slate-50 mt-1 flex items-center gap-2">
+            <Clock className="h-5 w-5 text-sky-400" />
+            {stats?.waitingForMatch ?? 0}
+          </p>
         </div>
       </div>
 
-      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Chart */}
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <h3 className="text-lg font-semibold text-slate-50 mb-4">Revenue (Last 30 Days)</h3>
+          <h3 className="text-lg font-semibold text-slate-50 mb-4">Revenue (last 30 days)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -121,9 +148,8 @@ export const Dashboard = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* User Growth Chart */}
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <h3 className="text-lg font-semibold text-slate-50 mb-4">User Growth (Last 30 Days)</h3>
+          <h3 className="text-lg font-semibold text-slate-50 mb-4">User signups (last 30 days)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={userGrowthData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -133,25 +159,16 @@ export const Dashboard = () => {
                 contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #334155', borderRadius: '8px' }}
                 labelStyle={{ color: '#F8FAFC' }}
               />
-              <Area
-                type="monotone"
-                dataKey="total"
-                stackId="1"
-                stroke="#6366F1"
-                fill="#6366F1"
-                fillOpacity={0.6}
-              />
+              <Area type="monotone" dataKey="total" stackId="1" stroke="#6366F1" fill="#6366F1" fillOpacity={0.6} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Subscription Distribution and Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Subscription Distribution */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <h3 className="text-lg font-semibold text-slate-50 mb-4">Subscription Plan Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <h3 className="text-lg font-semibold text-slate-50 mb-4">Plans (active)</h3>
+          <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
                 data={pieData}
@@ -159,12 +176,12 @@ export const Dashboard = () => {
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
-                outerRadius={80}
+                outerRadius={72}
                 fill="#8884d8"
                 dataKey="value"
               >
                 {pieData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-p-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip />
@@ -172,22 +189,101 @@ export const Dashboard = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Recent Activity */}
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <h3 className="text-lg font-semibold text-slate-50 mb-4">Recent Activity</h3>
-          <div className="space-y-3">
-            {recentActivity?.users?.slice(0, 5).map((user: any) => (
-              <div key={user.email} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
-                <div>
-                  <p className="text-sm text-slate-300">New user signup</p>
-                  <p className="text-xs text-slate-400">{user.email}</p>
-                </div>
-                <p className="text-xs text-slate-400">
-                  {format(new Date(user.created_at), 'MMM dd, HH:mm')}
-                </p>
+          <h3 className="text-lg font-semibold text-slate-50 mb-4">Payment channel (active)</h3>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie
+                data={paymentPie}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
+                outerRadius={72}
+                dataKey="value"
+              >
+                {paymentPie.map((_, index) => (
+                  <Cell key={`cell-pay-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+          <h3 className="text-lg font-semibold text-slate-50 mb-4">User English level</h3>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie
+                data={levelPie}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
+                outerRadius={72}
+                dataKey="value"
+              >
+                {levelPie.map((_, index) => (
+                  <Cell key={`cell-lvl-${index}`} fill={COLORS[(index + 1) % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+          <h3 className="text-lg font-semibold text-slate-50 mb-4">Recent signups</h3>
+          <div className="space-y-2">
+            {recentActivity?.users?.map((user: { email?: string | null; username?: string | null; created_at?: string | null }) => (
+              <div key={(user.email ?? user.username ?? '') + (user.created_at ?? '')} className="flex justify-between p-3 bg-slate-700 rounded-lg text-sm">
+                <span className="text-slate-200">{user.email ?? user.username ?? '—'}</span>
+                <span className="text-slate-400 text-xs">
+                  {user.created_at ? format(new Date(user.created_at), 'MMM dd, HH:mm') : ''}
+                </span>
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+          <h3 className="text-lg font-semibold text-slate-50 mb-4">Recent lesson completions</h3>
+          <div className="space-y-2">
+            {recentActivity?.lessonCompletions?.map(
+              (row: { id: string; profiles?: { email?: string | null }; lessons?: { title?: string }; completed_at?: string | null }) => (
+                <div key={row.id} className="flex justify-between p-3 bg-slate-700 rounded-lg text-sm">
+                  <span className="text-slate-200 truncate mr-2">
+                    {row.lessons?.title ?? 'Lesson'} — {row.profiles?.email ?? '—'}
+                  </span>
+                  <span className="text-slate-400 text-xs shrink-0">
+                    {row.completed_at ? format(new Date(row.completed_at), 'MMM dd') : ''}
+                  </span>
+                </div>
+              ),
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <h3 className="text-lg font-semibold text-slate-50 mb-4">Recent subscriptions</h3>
+        <div className="space-y-2">
+          {recentActivity?.subscriptions?.map(
+            (sub: { id: string; user_id: string; plan_type: string; amount: number | null; currency: string | null; created_at: string | null; payment_channel?: string | null }) => (
+              <div key={sub.id} className="flex flex-wrap justify-between gap-2 p-3 bg-slate-700 rounded-lg text-sm">
+                <span className="text-slate-200 font-mono text-xs">{sub.user_id.slice(0, 8)}…</span>
+                <span className="text-slate-300">{sub.plan_type}</span>
+                <span className="text-slate-400">{sub.payment_channel ?? '—'}</span>
+                <span className="text-emerald-400">
+                  {sub.amount != null ? `${sub.currency ?? ''} ${sub.amount}` : '—'}
+                </span>
+                <span className="text-slate-500 text-xs">{sub.created_at ? format(new Date(sub.created_at), 'MMM dd') : ''}</span>
+              </div>
+            ),
+          )}
         </div>
       </div>
     </div>

@@ -1,11 +1,5 @@
 import { create } from 'zustand';
-
-// User type from Supabase Auth
-type User = {
-  id: string;
-  email?: string;
-  [key: string]: any;
-};
+import type { User } from '@supabase/supabase-js';
 
 interface AuthState {
   user: User | null;

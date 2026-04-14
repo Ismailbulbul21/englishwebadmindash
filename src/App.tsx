@@ -10,10 +10,8 @@ import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Users } from './pages/Users';
 import { UserDetail } from './pages/UserDetail';
-import { Courses } from './pages/Courses';
-import { CourseChapters } from './pages/CourseChapters';
-import { ExamEditor } from './pages/ExamEditor';
-import { Exams } from './pages/Exams';
+import { Lessons } from './pages/Lessons';
+import { LessonEditor } from './pages/LessonEditor';
 import { Subscriptions } from './pages/Subscriptions';
 import { SpeakingSessions } from './pages/SpeakingSessions';
 import { Settings } from './pages/Settings';
@@ -21,7 +19,9 @@ import { Settings } from './pages/Settings';
 function App() {
   useEffect(() => {
     initializeAuth();
-    const { data: { subscription } } = setupAuthListener();
+    const {
+      data: { subscription },
+    } = setupAuthListener();
     return () => {
       subscription.unsubscribe();
     };
@@ -73,41 +73,21 @@ function App() {
             }
           />
           <Route
-            path="/courses"
+            path="/lessons"
             element={
               <ProtectedRoute>
                 <MainLayout>
-                  <Courses />
+                  <Lessons />
                 </MainLayout>
               </ProtectedRoute>
             }
           />
           <Route
-            path="/courses/:courseId/chapters"
+            path="/lessons/:lessonId"
             element={
               <ProtectedRoute>
                 <MainLayout>
-                  <CourseChapters />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chapters/:chapterId/exam"
-            element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <ExamEditor />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/exams"
-            element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <Exams />
+                  <LessonEditor />
                 </MainLayout>
               </ProtectedRoute>
             }
